@@ -7,6 +7,7 @@ local options = {
 
 if platform.is_win then
    options.default_prog = { 'cmd' }
+   options.mux_enable_ssh_agent = false
    options.launch_menu = {
       { label = 'cmd', args = { 'cmd' } },
       { label = 'cmd admin', args = { 'C:/Program Files/gsudo/Current/gsudo.exe', 'cmd.exe' } },
@@ -23,8 +24,9 @@ if platform.is_win then
       -- { label = 'Nushell', args = { 'nu' } },
       -- { label = 'Msys2', args = { 'ucrt64.cmd' } },
       {
-         label = 'ssh raspberry pi 3',
-         args = { "ssh.exe", "rpi3" },
+         label = "MSYS UCRT64",
+		   args = { "d:/msys64/msys2_shell.cmd", "-defterm", "-no-start", "-ucrt64", "-shell", "bash" },
+         -- другой способ запуска:   args = { "cmd.exe ", "/k", "d:/msys64/msys2_shell.cmd -defterm -here -no-start -ucrt64 -shell zsh" },
       },
       {
          label = 'Cygwin zsh',
