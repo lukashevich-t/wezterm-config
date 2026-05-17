@@ -18,7 +18,7 @@ return {
    default_cursor_style = 'BlinkingBar', -- SteadyBlock, BlinkingBlock, SteadyUnderline, BlinkingUnderline, SteadyBar,  BlinkingBar
    cursor_blink_rate = 500,
 
-   window_decorations = 'RESIZE',-- NONE, RESIZE, TITLE, "RESIZE | TITLE"
+   window_decorations = 'NONE',-- NONE, RESIZE, TITLE, "RESIZE | TITLE"
 
    -- color scheme
    colors = colors,
