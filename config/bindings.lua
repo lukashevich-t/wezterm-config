@@ -31,7 +31,7 @@ local keys = {
    { key = 'f',   mods = mod.SUPER, action = act.Search({ CaseInSensitiveString = '' }) },
    {
       key = 'u',
-      mods = mod.SUPER_REV,
+      mods = 'SHIFT|CTRL',
       action = wezterm.action.QuickSelectArgs({
          label = 'open url',
          patterns = {
