@@ -1,0 +1,16 @@
+{
+   "$schema": "https://raw.githubusercontent.com/LuaLS/lua-language-server/master/schema/jsonc/luarc.schema.json",
+   "runtime": {
+      "version": "Lua 5.1",
+      "path": ["?.lua", "?/init.lua"],
+      "pathStrict": false
+   },
+   "workspace": {
+      "checkThirdParty": false,
+      "ignoreDir": [".git", "docs"]
+   },
+   "diagnostics": {
+      "globals": ["wezterm", "window", "pane"],
+      "disable": ["lowercase-global", "undefined-global"]
+   }
+}
