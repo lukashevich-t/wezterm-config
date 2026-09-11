@@ -33,7 +33,7 @@ local cells = Cells:new()
 
 cells
     :add_segment('date_text', '', colors.date, attr(attr.intensity('Bold')))
-    :add_segment('separator', '   ', colors.separator)
+    :add_segment('separator', ' | ', colors.separator)
     :add_segment('battery_text', '', colors.battery, attr(attr.intensity('Bold')))
 
 ---@return string
