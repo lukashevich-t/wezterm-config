@@ -60,9 +60,7 @@ M.setup = function(opts)
             :update_segment_text('date_text', wezterm.strftime(valid_opts.date_format))
             :update_segment_text('battery_text', battery_info())
 
-        window:set_right_status(
-            wezterm.format(cells:render({ 'date_text', 'separator', 'battery_text' }))
-        )
+        window:set_right_status(wezterm.format(cells:render({ 'date_text', 'separator', 'battery_text' })))
     end)
 end
 
