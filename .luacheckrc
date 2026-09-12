@@ -3,6 +3,7 @@
 
 std = "lua51"
 cache = true
+max_line_length = false
 ignore = {
    "docs/",
    ".luacheckcache",
@@ -16,4 +17,9 @@ read_globals = {
    wezterm = { other_fields = true },
    window = { other_fields = true },
    pane = { other_fields = true },
+}
+
+-- Debug/dump helpers intentionally set as globals:
+globals = {
+   "dump",
 }

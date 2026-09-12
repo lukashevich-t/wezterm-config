@@ -20,51 +20,51 @@ local actionDesctiptions = {
     },
     ActivateCopyMode = {
         groups = { 'Search & selection' },
-        describe = function(command)
+        describe = function(_command)
             return 'Включает режим копирования'
         end,
     },
     ActivateCommandPalette = {
         groups = { 'Interface' },
-        describe = function(command)
+        describe = function(_command)
             return 'Показать командную панель'
         end,
     },
     ShowLauncher = {
         groups = { 'Interface' },
-        describe = function(command)
+        describe = function(_command)
             return 'Запуск предопределенных команд'
         end,
     },
     ToggleFullScreen = {
         groups = { 'Windows & tabs' },
-        describe = function(command)
+        describe = function(_command)
             return 'На весь экран'
         end,
     },
     ShowDebugOverlay = {
         groups = { 'Interface' },
-        describe = function(command)
+        describe = function(_command)
             return 'Отладочный терминал'
         end,
     },
     Search = {
         groups = { 'Search & selection' },
-        describe = function(command)
+        describe = function(_command)
             return 'Поиск'
         end,
     },
     QuickSelectArgs = {
         groups = { 'Search & selection' },
-        describe = function(command)
+        describe = function(_command)
             return 'копирование предопределенных паттернов в clipboard'
         end,
     },
     ShowLauncherArgs = {
         groups = { 'Interface' },
         describe = function(command)
-            result = 'Подбор: '
-            flags = string.upper(command.action.ShowLauncherArgs.flags)
+            local result = 'Подбор: '
+            local flags = string.upper(command.action.ShowLauncherArgs.flags)
             if string.find(flags, 'TABS') then
                 result = result .. 'табов, '
             end
@@ -114,7 +114,7 @@ local actionDesctiptions = {
     CopyTo = {
         groups = { 'Input' },
         describe = function(command)
-            t = {
+            local t = {
                 ClipboardAndPrimarySelection = 'буфер обмена и PrimarySelection',
                 Clipboard = 'буфер обмена',
                 PrimarySelection = 'PrimarySelection',
@@ -125,7 +125,7 @@ local actionDesctiptions = {
     PasteFrom = {
         groups = { 'Input' },
         describe = function(command)
-            t = {
+            local t = {
                 Clipboard = 'буфера обмена',
                 PrimarySelection = 'PrimarySelection',
             }
@@ -135,7 +135,7 @@ local actionDesctiptions = {
     SpawnTab = {
         groups = { 'Windows & tabs' },
         describe = function(command)
-            domain = command.action.SpawnTab
+            local domain = command.action.SpawnTab
             if type(domain) == 'table' then
                 domain = domain.DomainName
             end
@@ -160,7 +160,7 @@ local actionDesctiptions = {
     },
     SpawnWindow = {
         groups = { 'Windows & tabs' },
-        describe = function(command)
+        describe = function(_command)
             return 'Создать новое ОКНО со вкладкой из домена по умолчанию'
         end,
     },
@@ -179,14 +179,14 @@ local actionDesctiptions = {
     },
     TogglePaneZoomState = {
         groups = { 'Panes' },
-        describe = function(command)
+        describe = function(_command)
             return 'Развернуть текущую панель на все окно'
         end,
     },
     ScrollByLine = {
         groups = { 'History' },
         describe = function(command)
-            count = command.action.ScrollByLine
+            local count = command.action.ScrollByLine
             if count > 0 then
                 return string.format('скролл на %d строк ниже', count)
             else
@@ -197,7 +197,7 @@ local actionDesctiptions = {
     ScrollByPage = {
         groups = { 'history' },
         describe = function(command)
-            count = command.action.ScrollByPage
+            local count = command.action.ScrollByPage
             if count > 0 then
                 return string.format('скролл на %d страниц ниже', count)
             else
@@ -208,7 +208,7 @@ local actionDesctiptions = {
     ActivatePaneDirection = {
         groups = { 'Panes' },
         describe = function(command)
-            direction = command.action.ActivatePaneDirection
+            local direction = command.action.ActivatePaneDirection
             if string.lower(direction) == 'left' then
                 return 'Переключиться на панель левее'
             end
@@ -226,7 +226,7 @@ local actionDesctiptions = {
     ActivateKeyTable = {
         groups = { 'Interface' },
         describe = function(command)
-            p = command.action.ActivateKeyTable
+            local p = command.action.ActivateKeyTable
             return string.format(
                 'Включить keytable %s. one_shot = %s, prevent_fallback = %s, replace_current = %s, p.until_unknown = %s',
                 p.name,
@@ -240,11 +240,10 @@ local actionDesctiptions = {
 }
 
 local function get_uniq_groups()
-    local d = actionDesctiptions
     local result = {}
-    for k, description in pairs(actionDesctiptions) do
+    for _, description in pairs(actionDesctiptions) do
         if description.groups then
-            for k1, v1 in ipairs(description.groups) do
+            for _, v1 in ipairs(description.groups) do
                 result[string.lower(v1)] = v1
             end
         else
@@ -257,15 +256,7 @@ end
 
 local function describe_action(command)
     local action = command['action']
-    local actionName = 'Unknown'
-    if type(action) == 'string' then
-        actionName = action
-    else
-        for k, v in pairs(action) do
-            actionName = k
-            break
-        end
-    end
+    local actionName = type(action) == 'string' and action or next(action) or 'Unknown'
     if actionDesctiptions[actionName] == nil or actionDesctiptions[actionName].describe == nil then
         return actionName
     else
@@ -275,22 +266,13 @@ end
 
 local function filter_keys(all_keys, group_id)
     local result = {}
-    for k, v in ipairs(all_keys) do
-        local action_name = ''
-        local action = v.action
-        if type(action) == 'string' then
-            action_name = action
-        else
-            for x, y in pairs(action) do
-                action_name = x
-                break
-            end
-        end
+    for _, v in ipairs(all_keys) do
+        local action_name = type(v.action) == 'string' and v.action or next(v.action) or ''
         if action_name == '' then
             goto continue
         end
         if actionDesctiptions[action_name] and actionDesctiptions[action_name].groups then
-            for g_idx, g_name in ipairs(actionDesctiptions[action_name].groups) do
+            for _, g_name in ipairs(actionDesctiptions[action_name].groups) do
                 if string.lower(g_name) == group_id then
                     table.insert(result, v)
                     break
@@ -308,7 +290,7 @@ end
 
 local function srep(str, count)
     local result = ''
-    for i = 1, count do
+    for _ = 1, count do
         result = result .. str
     end
     return result
@@ -324,17 +306,17 @@ local function cpad(str, count, symbol)
     return srep(symbol, left_spaces) .. str .. srep(symbol, right_spaces)
 end
 
-_G._keys = function(group_id)
+_G._keys = function(_group_id)
     local uniq_groups = get_uniq_groups()
 
     local conf = window:effective_config()
     local result = '\n'
 
     local all_keys = conf['keys']
-    for group_id, group_name in pairs(uniq_groups) do
+    for gid, group_name in pairs(uniq_groups) do
         result = result .. cpad(group_name, 80, '=') .. '\n'
-        keys = filter_keys(all_keys, group_id)
-        for k, v in ipairs(keys) do
+        local keys = filter_keys(all_keys, gid)
+        for _, v in ipairs(keys) do
             result = result .. format_shortcut(v['mods'], v['key'], describe_action(v)) .. '\n'
         end
     end
