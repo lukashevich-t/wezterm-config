@@ -5,8 +5,12 @@ std = "lua51"
 cache = true
 max_line_length = false
 ignore = {
-   "docs/",
    ".luacheckcache",
+}
+
+exclude_files = {
+   "docs/",
+   ".luarocks/",
 }
 
 -- Globals available in the wezterm runtime:
