@@ -1,7 +1,7 @@
 {
    "$schema": "https://raw.githubusercontent.com/LuaLS/lua-language-server/master/schema/jsonc/luarc.schema.json",
    "runtime": {
-      "version": "Lua 5.1",
+      "version": "Lua 5.4",
       "path": ["?.lua", "?/init.lua"],
       "pathStrict": false
    },

@@ -46,9 +46,9 @@ jobs:
               curl -sSL \
                  "https://github.com/LuaLS/lua-language-server/releases/download/${LLS_VERSION}/lua-language-server-${LLS_VERSION}-linux-x64.tar.gz" \
                  -o /tmp/lls.tgz
-              mkdir -p /tmp/lls
-              tar -xzf /tmp/lls.tgz -C /tmp/lls
-              install -m 0755 /tmp/lls/bin/lua-language-server /usr/local/bin/lua-language-server
+              mkdir -p "$HOME/lls"
+              tar -xzf /tmp/lls.tgz -C "$HOME/lls"
+              ln -sf "$HOME/lls/bin/lua-language-server" /usr/local/bin/lua-language-server
               lua-language-server --version
 
          - name: lua-language-server
