@@ -57,7 +57,7 @@ M.setup = function(opts)
 
     wezterm.on('update-right-status', function(window, _pane)
         cells
-            -- :update_segment_text('date_text', wezterm.strftime(valid_opts.date_format))
+--            :update_segment_text('date_text', wezterm.strftime(valid_opts.date_format))
             :update_segment_text('battery_text', battery_info())
 
         window:set_right_status(wezterm.format(cells:render({ 'date_text', 'separator', 'battery_text' })))
