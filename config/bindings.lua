@@ -28,6 +28,7 @@ local keys = {
    },
    { key = 'F11', mods = 'NONE',    action = act.ToggleFullScreen },
    { key = 'F12', mods = 'NONE',    action = act.ShowDebugOverlay },
+   { key = 'F1',  mods = 'NONE',    action = act.EmitEvent('help.show-pager') },
    { key = 'f',   mods = mod.SUPER, action = act.Search({ CaseInSensitiveString = '' }) },
    {
       key = 'u',
@@ -234,6 +235,9 @@ local keys = {
          timemout_miliseconds = 1000,
       }),
    },
+   -- help: fuzzy search over key bindings
+   -- { key = 'phys:?', mods = 'LEADER', action = act.EmitEvent('help.show-picker') },
+   { key = '/', mods = 'LEADER', action = act.EmitEvent('help.show-picker') },
 }
 
 -- stylua: ignore

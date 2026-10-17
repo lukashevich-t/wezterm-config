@@ -26,6 +26,7 @@ wezterm.lua                 ← entrypoint
 │   ├── right-status.lua    ← right status bar (date + battery)
 │   ├── tab-title.lua       ← format-tab-title + custom tab events
 │   ├── new-tab-button.lua  ← right-click on new-tab button
+│   ├── help.lua            ← help.show-pager / help.show-picker handlers
 │   └── startup.lua         ← gui-startup: spawns initial window
 ├── utils/                  ← shared helpers, all `require('utils.X')`
 │   ├── platform.lua        ← {os, is_win, is_linux, is_mac} via wezterm.target_triple
@@ -34,12 +35,41 @@ wezterm.lua                 ← entrypoint
 │   ├── gpu-adapter.lua     ← auto-pick WebGPU adapter per OS
 │   ├── math.lua            ← clamp, round
 │   ├── dump.lua            ← global __dump/__pdump
-│   └── help.lua            ← registers global _keys() (Russian descriptions)
+│   ├── help.lua            ← keybindings reference: Russian descriptions,
+│   │                         categories, render()/active_entries(), _G._keys
+│   └── default-bindings.lua← GENERATED stock wezterm bindings (see below)
 ├── colors/custom.lua       ← active color scheme (catppuccin-mocha variant)
 └── docs/                   ← reference: default-config.md, default-keys.md,
                               ahk.md (Windows quake-style AHK script),
                               tempNotes.md (scratchpad, not authoritative)
 ```
+
+## Keybindings help (F1)
+
+`utils/help.lua` builds one reference text out of **config bindings + stock
+wezterm bindings**, grouped into categories (Интерфейс, Окна и вкладки, Панели,
+Ввод и буфер обмена, Скролл и буфер, Поиск и выделение, Мышь, Клавиатурные
+таблицы). `*` = from config, `→` = stock binding overridden by config, `-` =
+stock binding (in the main table it is **inactive**, because
+`disable_default_key_bindings = true`; key tables and mouse bindings stay
+active).
+
+Two entry points, both wired as custom events in `events/help.lua`:
+
+- `help.show-pager` → **F1**. Writes the text to a temp file and opens a new
+  tab with a pager: `less -R -X -F` on Linux/macOS, PowerShell
+  `Get-Content -Raw -Encoding UTF8` on Windows.
+- `help.show-picker` → **LEADER + ?** (`CTRL+Space`, then `?`). Fuzzy
+  `InputSelector` over *active* bindings; ENTER copies the chord to the
+  clipboard and shows a toast.
+
+`F12 → _keys()` prints the same text inside the debug overlay.
+
+Both handlers render from `window:effective_config()`, so `set_config_overrides`
+changes are reflected. The text is also rendered to a temp file at config load
+(`events/help.lua` → `M.setup`), because writing files from inside an event
+handler is not guaranteed in wezterm's Lua runtime — the handler re-writes the
+file if it can and falls back to the pre-generated one.
 
 ## Hidden coupling — easy to miss
 
@@ -51,26 +81,37 @@ wezterm.lua                 ← entrypoint
 - `events/tab-title.lua` defines three custom events consumed by
   `config/bindings.lua`: `tabs.manual-update-tab-title`, `tabs.reset-tab-title`,
   `tabs.toggle-tab-bar`. Key names must stay in sync with both files.
-- `utils/help.lua` installs `_G._keys`; the F12 debug overlay is the only way
-  to invoke it from the running terminal. Don't move it out of `utils/` without
+- `events/help.lua` defines `help.show-pager` and `help.show-picker`, consumed
+  by `config/bindings.lua` (F1 and LEADER+?). Keep both sides in sync.
+- **`utils/default-bindings.lua` is generated data, not hand-written.** It holds
+  the stock wezterm bindings used by the help reference. Regenerate it after a
+  wezterm upgrade (see "Environment quirks" for the exact commands), never edit
+  it by hand — descriptions for stock actions live in `utils/help.lua`.
+- `utils/help.lua` requires `config.bindings` **lazily, inside `M.entries()`** —
+  that indirection is what keeps `config/bindings.lua` free of a require cycle
+  with the help module.
+- `utils/help.lua` installs `_G._keys`; the F12 debug overlay is a fallback way
+  to invoke it (F1 is the normal one). Don't move it out of `utils/` without
   keeping the `require` in `wezterm.lua`.
 
 ## Conventions to preserve
 
-- **3-space indent, single quotes, `local M = {}` module pattern.**
+- **4-space indent** (per `stylua.toml`), single quotes, `local M = {}` module
+  pattern. Run `stylua` after editing; CI enforces it.
 - **`---@class` / `---@field` / `---@param` LuaCATS annotations everywhere** —
   they drive `lua-language-server` completions and are not noise. Keep them
   when editing.
-- **Alignment-heavy tables** (key tables, color palettes) use a leading
-  `-- stylua: ignore` marker. There is **no `stylua.toml`** in the repo;
-  don't reformat those tables — they'll fight the markers.
+- **Alignment-heavy tables** (key tables, color palettes, `MOUSE_DEFAULTS` in
+  `utils/help.lua`) use a leading `-- stylua: ignore` marker. Don't reformat
+  those by hand — they'll fight the markers. `utils/default-bindings.lua` has
+  no marker because it is machine-generated and already stylua-formatted.
 - **`mod.SUPER` / `mod.SUPER_REV` in `config/bindings.lua`** map ALT/CTRL on
   Windows+Linux and SUPER/SUPER|CTRL on macOS (see top of that file). Use the
   table instead of hard-coding `ALT` or `SUPER` so cross-platform bindings
   stay consistent.
 - **Platform branching** belongs in `utils/platform.lua` and (for OS-specific
-  launch menu / default prog) in `config/launch.lua`. Do not re-detect the
-  OS elsewhere.
+  launch menu / default prog / pager) in `config/launch.lua` and
+  `events/help.lua`. Do not re-detect the OS elsewhere.
 
 ## Adding things
 
@@ -83,6 +124,11 @@ pattern (`right-status.lua` is the cleanest reference).
 `Config:append` chain runs in order — duplicate keys are dropped with a
 warning, so don't define the same key in two files.
 
+**New key binding:** add it to `config/bindings.lua`. If it is a custom event,
+declare the event in the owning `events/*.lua` file too. If you want a Russian
+description in the F1 reference, add an entry to `action_descriptions` in
+`utils/help.lua` (`groups` puts it into a category).
+
 **New color segment / status field:** build it via `Cells:new()` +
 `add_segment` + `update_segment_text`/`update_segment_colors` + `render({ids})`,
 then wrap in `wezterm.format(...)`. Nerd Font glyphs come from
@@ -90,18 +136,23 @@ then wrap in `wezterm.format(...)`. Nerd Font glyphs come from
 
 ## Verification
 
-There are **no tests, no lint, no typecheck, no build step**. The only
-verification is:
+There are **no tests and no build step**, but there *is* linting (see
+`.github/workflows/lint.yml`):
 
-1. `wezterm.lua` is reloaded automatically on save
-   (`automatically_reload_config = true` in `config/general.lua`).
-2. On failure, wezterm surfaces the Lua error in a toast and logs to its log
-   file (`wezterm log` or check the GUI window).
-3. Reload manually with `wezterm cli send-text --no-paste "key:ctrl+shift+R"`
-   or via the `ReloadConfiguration` action if you bind it.
+1. `stylua --check .` — formatting; must pass (it is currently the only thing
+   failing, due to the known WIP in `events/right-status.lua`).
+2. `luacheck .` — warnings/lint; should be 0 warnings.
+3. `luac -p <file>` — quick syntax check for one file.
+4. `wezterm --config-file ~/.config/wezterm/wezterm.lua show-keys` — proves the
+   whole config loads and shows the effective key table (works headless).
+5. To preview the help output without the GUI:
+   `wezterm --config-file /tmp/run-help.lua show-keys` where that temp config
+   sets `package.path`, `require`s `utils.help`, writes `help.render()` to a
+   file and calls `os.exit(0)`.
 
-Use `_keys()` from inside the debug overlay (F12) to print a categorized list
-of current bindings (labels are in Russian — see `utils/help.lua`).
+At runtime `wezterm.lua` reloads automatically on save
+(`automatically_reload_config = true` in `config/general.lua`); on failure wezterm
+shows the Lua error in a toast and writes it to its log file.
 
 ## Environment quirks
 
@@ -117,6 +168,19 @@ of current bindings (labels are in Russian — see `utils/help.lua`).
   defined in `config/domains.lua` (commented in the file).
 - The right-side date is driven by `update-right-status` on a 1 s cadence
   (`status_update_interval = 1000` in `config/general.lua`).
+- **Regenerate `utils/default-bindings.lua` after upgrading wezterm:**
+  ```sh
+  wezterm --skip-config show-keys --lua > /tmp/dk-default.lua
+  wezterm --skip-config show-keys --lua --key-table copy_mode  > /tmp/dk-copy.lua
+  wezterm --skip-config show-keys --lua --key-table search_mode > /tmp/dk-search.lua
+  ```
+  (the generator lives in the commit history / ask the user; the `--lua` files
+  are loaded with a stubbed `wezterm.action` and re-serialized as plain tables).
+- **Lua 5.1 runtime**: `string.format` does **not** support `%-*s` (use
+  `utils/help.lua`'s `pad_right`), and `goto`/integer division quirks apply.
+  `wezterm.time.now()` and `wezterm.gui.*` are not safely callable while the
+  config file itself is loading — hence the generated defaults table and
+  `os.date` for timestamps.
 
 ## Git state
 
